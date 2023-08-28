@@ -132,24 +132,6 @@ function onOpen()  {
   });
 }
 
-function sendInquiryMail() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sender = new MailSenderSheet(ss);
-  const list = new ToListSheet(ss).list;
-
-  if (sender.from === "" || sender.subject === "" ||sender.body === "") {
-    return outErrorMessage("メールを作成できません。メール本文シートの各項目に入力してください。");
-  }
-
-  if (list.length === 0 || list.length > 30) {
-    return outErrorMessage("メールの宛先リストに有効なデータを1～30件設定してください。");
-  }
-
-  list.forEach(function(row) {
-    GmailApp.sendEmail(row[1], sender.subject, replaceBody(row, sender.body), sender.getOption());
-  });
-}
-
 function getInquiryList() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const customSearch = new SearchConfigSheet(ss);
@@ -171,5 +153,23 @@ function getInquiryList() {
     if (matches !== null) {
       toList.addMail(company.name, matches);
     }
+  });
+}
+
+function sendInquiryMail() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sender = new MailSenderSheet(ss);
+  const list = new ToListSheet(ss).list;
+
+  if (sender.from === "" || sender.subject === "" ||sender.body === "") {
+    return outErrorMessage("メールを作成できません。メール本文シートの各項目に入力してください。");
+  }
+
+  if (list.length === 0 || list.length > 30) {
+    return outErrorMessage("メールの宛先リストに有効なデータを1～30件設定してください。");
+  }
+
+  list.forEach(row => {
+    GmailApp.sendEmail(row[1], sender.subject, replaceBody(row, sender.body), sender.getOption());
   });
 }
