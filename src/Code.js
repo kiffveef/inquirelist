@@ -124,15 +124,15 @@ function onOpen()  {
   setMenu({
     items: [{
       name: "問合せ先取得",
-      funcName: "getInquiryList"
+      funcName: "getContactList"
     }, {
       name: "メール送信",
-      funcName: "sendInquiryMail"
+      funcName: "sendContactMail"
     }]
   });
 }
 
-function getInquiryList() {
+function getContactList() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const customSearch = new SearchConfigSheet(ss);
   const companies = new CompanySheet(ss);
@@ -159,7 +159,7 @@ function getInquiryList() {
   });
 }
 
-function sendInquiryMail() {
+function sendContactMail() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sender = new MailSenderSheet(ss);
   const list = new ToListSheet(ss).list;
