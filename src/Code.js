@@ -138,6 +138,9 @@ function getInquiryList() {
   const companies = new CompanySheet(ss);
   const toList = new ToListSheet(ss);
 
+  if (companies.list.length === 0 || companies.list.length > 100) {
+    return outErrorMessage("企業リストに有効なデータを1～100件設定してください。");
+  }
   companies.list.forEach(company => {
     company.url = customSearch.searchKeyword(company.name);
     companies.setUrl(company.urlCell, company.url);
