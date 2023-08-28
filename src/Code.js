@@ -21,6 +21,72 @@ const replaceBody = (row, body) => {
   return body.replace("{company}", row[0]);
 };
 
+class SearchConfigSheet {
+  constructor(ss) {
+    this.sheet = ss.getSheetByName("config");
+    this.apiKey = null;
+    this.engineId = null;
+    this.searchUrl = "https://www.googleapis.com/customsearch/v1?key=%s&cx=%s&q=%s&num=%s";
+    if (this.sheet !== null) {
+      this.apiKey = this.sheet.getRange("B1").getValue();
+      this.engineId = this.sheet.getRange("B2").getValue();
+    }
+  }
+
+  searchKeyword(keyword) {
+    const url = Utilities.formatString(
+      this.searchUrl,
+      this.apiKey,
+      this.engineId,
+      encodeURI(Utilities.formatString("問い合わせ %s", keyword)),
+      1
+    );
+
+    return JSON.parse(UrlFetchApp.fetch(url).getContentText("UTF-8")).items[0].link;
+  }
+}
+
+class CompanySheet {
+  constructor(ss) {
+    this.sheet = ss.getSheetByName("企業リスト");
+    this.list = new Array;
+    if (this.sheet !== null) {
+      this.list = this.sheet.getRange(1, 1, this.sheet.getLastRow(), this.sheet.getLastColumn())
+        .getValues()
+        .filter(row => (row[0] !== "" && row[1] === ""))
+        .map(row => ({
+          name: row[0],
+          url: row[1],
+          urlCell: this.sheet.createTextFinder(row[0]).findNext().offset(0, 1).getA1Notation()
+        }));
+    }
+  }
+
+  setUrl(a1cell, url) {
+    this.sheet.getRange(a1cell).setValue(url);
+    return;
+  }
+}
+
+class ToListSheet {
+  constructor(ss) {
+    this.sheet = ss.getSheetByName("メール宛先リスト");
+    this.list = new Array;
+    if (this.sheet !== null) {
+      this.list = this.sheet.getRange(2, 1, this.sheet.getLastRow(), this.sheet.getLastColumn())
+        .getValues()
+        .filter(row => row.indexOf("") === -1);
+    }
+  }
+
+  addMail(company, mails) {
+    Array.from(new Set(mails)).forEach(mail => {
+      this.sheet.appendRow([company, mail]);
+    });
+    return;
+  }
+}
+
 class MailSenderSheet {
   constructor(ss) {
     this.sheet = ss.getSheetByName("メールテンプレート");
@@ -51,18 +117,6 @@ class MailSenderSheet {
     }
 
     return mailOption;
-  }
-}
-
-class ToListSheet {
-  constructor(ss) {
-    this.sheet = ss.getSheetByName("メール宛先リスト");
-    this.list = new Array;
-    if (this.sheet !== null) {
-      this.list = this.sheet.getRange(2, 1, this.sheet.getLastRow(), this.sheet.getLastColumn())
-        .getValues()
-        .filter(row => row.indexOf("") === -1);
-    }
   }
 }
 
@@ -97,5 +151,25 @@ function sendInquiryMail() {
 }
 
 function getInquiryList() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const customSearch = new SearchConfigSheet(ss);
+  const companies = new CompanySheet(ss);
+  const toList = new ToListSheet(ss);
 
+  companies.list.forEach(company => {
+    company.url = customSearch.searchKeyword(company.name);
+    companies.setUrl(company.urlCell, company.url);
+
+    var contents = UrlFetchApp.fetch(company.url).getContentText();
+    var $ = Cheerio.load(contents, {
+      decodeEntities: false
+    });
+    var matches = $("body")
+      .first()
+      .text()
+      .match(/[a-zA-Z0-9]+([\._-]?[a-zA-Z0-9])*@[a-zA-Z0-9]+([\.-]?[a-zA-Z0-9])*(\.\w{2,3})/gi);
+    if (matches !== null) {
+      toList.addMail(company.name, matches);
+    }
+  });
 }
