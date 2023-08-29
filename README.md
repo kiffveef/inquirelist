@@ -5,8 +5,11 @@
 ### 1. Google Custom Searchの使用を開始
 Google Custom Searchを利用します。  
 以下で作成したAPIキー/検索エンジンIDをconfigシートの各項目に設定してください。
-- APIキー  
-[Google Developer Console](https://console.developers.google.com/?hl=JA)から任意のプロジェクトを作成し、認証情報 -> 認証情報を作成より `APIキー` を作成し取得。
+- APIキー
+  1. [Google Developer Console](https://console.developers.google.com/?hl=JA)から任意のプロジェクトを作成し、認証情報 -> 認証情報を作成より `APIキー` を作成。
+  1. サイドメニュー `ライブラリ` よりライブラリ一覧を表示し、 `Custom Search API` を選択し有効化。
+  1. サイドメニュー `認証情報` よりAPIキーを編集画面を表示、APIの制限 -> キーを制限を選択しプルダウンから `Custom Search API` を選択して保存。
+  1. `API Key` をコピーしconfigシートに貼り付けてください。
 - 検索エンジンID  
 [Custom Search Engine](https://programmablesearchengine.google.com/controlpanel/all)より検索エンジンを作成し、概要欄から `検索エンジンID` を取得。
 
